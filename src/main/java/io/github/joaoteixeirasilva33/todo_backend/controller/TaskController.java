@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -33,15 +34,29 @@ public class TaskController {
         }
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Task> updateTask(@PathVariable Long id, @RequestBody Task task) {
+    @PatchMapping("/{id}")
+    public ResponseEntity<Task> partialUpdateTask(@PathVariable Long id, @RequestBody Map<String, Object> updates) {
         Optional<Task> taskData = repository.findById(id);
 
         if (taskData.isPresent()) {
             Task _task = taskData.get();
-            _task.setTitle(task.getTitle());
-            _task.setDescription(task.getDescription());
-            _task.setStatus(task.getStatus());
+
+            // Atualiza apenas os campos fornecidos no request
+            updates.forEach((key, value) -> {
+                switch (key) {
+                    case "title":
+                        _task.setTitle((String) value);
+                        break;
+                    case "description":
+                        _task.setDescription((String) value);
+                        break;
+                    case "status":
+                        _task.setStatus((String) value);
+                        break;
+                    // Adicione outros casos para campos adicionais, se houver
+                }
+            });
+
             return new ResponseEntity<>(repository.save(_task), HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
